@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>أداة الفروع والمقر الرئيسي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F6F5;
+    --surface: #FFFFFF;
+    --border: #DCE3E1;
+    --text: #1E2A28;
+    --text-muted: #5B6866;
+    --accent: #146356;
+    --accent-soft: #E4EFEC;
+    --danger: #A23B3B;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Cairo', Tahoma, Arial, sans-serif;
+    font-size: 15px; line-height: 1.6;
+  }
+  .container { max-width: 640px; margin: 0 auto; padding: 0 16px 60px; }
+
+  .app-header {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 16px 16px 14px;
+  }
+  .app-header h1 { font-size: 18px; font-weight: 700; margin: 0 0 14px; }
+  .tabs { display: flex; gap: 4px; background: var(--accent-soft); padding: 4px; border-radius: 10px; }
+  .tab-btn {
+    flex: 1; border: none; background: transparent; padding: 12px 14px; border-radius: 8px;
+    font-family: inherit; font-weight: 600; font-size: 14px; color: var(--text-muted); cursor: pointer;
+  }
+  .tab-btn.active { background: var(--surface); color: var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+  main { padding-top: 20px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .panel { display: flex; flex-direction: column; gap: 12px; }
+  .section-title { font-size: 16px; font-weight: 700; margin: 0 0 4px; }
+  .section-subtitle { font-size: 13px; color: var(--text-muted); margin: -8px 0 4px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  label.field-label { font-weight: 600; font-size: 14px; display: block; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  input[type=text], input[type=number], input[type=tel], input[type=password], select {
+    width: 100%; padding: 13px 14px; border: 1px solid var(--border); border-radius: 8px;
+    font-family: inherit; font-size: 16px; background: var(--surface); color: var(--text); min-height: 46px;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+
+  button.btn-primary, button.btn-secondary {
+    padding: 13px 22px; border-radius: 8px; font-family: inherit; font-weight: 600; font-size: 15px;
+    cursor: pointer; width: 100%; min-height: 46px; border: none;
+  }
+  button.btn-primary { background: var(--accent); color: #fff; }
+  button.btn-secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--accent); }
+  button.btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+  button.btn-primary:active, button.btn-secondary:active { opacity: .85; }
+
+  button.btn-link {
+    background: none; border: none; color: var(--accent); font-family: inherit; font-weight: 600;
+    font-size: 13px; padding: 6px 0; cursor: pointer; text-decoration: underline; align-self: flex-start;
+  }
+
+  .form-message { font-size: 13px; min-height: 18px; color: var(--text-muted); }
+  .form-message.success { color: var(--accent); font-weight: 600; }
+  .form-message.error { color: var(--danger); font-weight: 600; }
+
+  .results-area { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+  .inventory-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .inventory-row .item-name { font-weight: 600; }
+  .inventory-row .item-qty { color: var(--accent); font-weight: 700; font-size: 16px; }
+  .inventory-row .item-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .empty-state { color: var(--text-muted); font-size: 14px; padding: 16px 0; }
+
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+  .employee-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; cursor: pointer; text-align: right;
+  }
+  .employee-card:active { border-color: var(--accent); }
+  .employee-card .ec-name { font-weight: 700; font-size: 14px; }
+  .employee-card .ec-id { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .employee-card .ec-meta { font-size: 12px; color: var(--accent); margin-top: 6px; }
+
+  .employee-detail {
+    margin-top: 18px; padding: 18px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; border-right: 4px solid var(--accent);
+  }
+  .employee-detail h2 { margin: 0 0 4px; font-size: 18px; }
+  .employee-detail .ed-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 16px; }
+  .ed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+  .ed-field { margin-bottom: 10px; font-size: 14px; }
+  a.doc-link { font-size: 13px; color: var(--accent); text-decoration: none; }
+
+  .doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+  .doc-card { border: 1px dashed var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+  .doc-card .doc-label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px; }
+  .doc-card input[type=file] { font-size: 12px; margin-top: 8px; width: 100%; }
+
+  .hq-lock {
+    display: flex; flex-direction: column; gap: 12px; align-items: stretch; max-width: 320px;
+    margin: 40px auto; padding: 24px 20px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; text-align: center;
+  }
+  .hq-lock .hq-lock-icon { font-size: 28px; }
+  .hq-lock h3 { margin: 0; font-size: 16px; }
+  .hq-lock p { margin: 0; font-size: 13px; color: var(--text-muted); }
+
+  .hq-change-pw {
+    margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--border);
+    display: none; flex-direction: column; gap: 10px;
+  }
+  .hq-change-pw.open { display: flex; }
+
+  @media (max-width: 480px) {
+    .doc-grid { grid-template-columns: 1fr; }
+    .card-grid { grid-template-columns: 1fr; }
+    .field-row { grid-template-columns: 1fr; }
+    .ed-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>أداة الفروع والمقر الرئيسي</h1>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="branch" onclick="switchTab('branch')">الفروع</button>
+    <button class="tab-btn" data-tab="hq" onclick="switchTab('hq')">المقر الرئيسي</button>
+  </nav>
+</header>
+
+<div class="container">
+<main>
+
+  <!-- ============== تبويب الفروع ============== -->
+  <section id="tab-branch" class="tab-panel active">
+
+    <div class="panel">
+      <h2 class="section-title">إدخال بيانات عهدة / مستهلكات</h2>
+
+      <label class="field-label" for="invBranch">الفرع / المحافظة</label>
+      <select id="invBranch"><option value="">-- اختر --</option></select>
+
+      <label class="field-label" for="invItem">الصنف</label>
+      <input type="text" id="invItem" placeholder="مثال: رزمة ورق A4">
+
+      <label class="field-label" for="invQty">الكمية التقريبية</label>
+      <input type="number" id="invQty" placeholder="مثال: 20">
+
+      <label class="field-label" for="invNotes">ملاحظات (اختياري)</label>
+      <input type="text" id="invNotes">
+
+      <button class="btn-primary" onclick="submitInventory()">إرسال</button>
+      <div id="invMessage" class="form-message"></div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="panel">
+      <h2 class="section-title">إضافة / تحديث بيانات موظف</h2>
+      <p class="section-subtitle">لو الرقم القومي موجود بالفعل، البيانات هتتحدّث بدل ما تتكرر.</p>
+
+      <label class="field-label" for="empBranch">الفرع / المحافظة</label>
+      <select id="empBranch"><option value="">-- اختر --</option></select>
+
+      <label class="field-label" for="empNationalId">الرقم القومي</label>
+      <input type="text" id="empNationalId" inputmode="numeric">
+
+      <label class="field-label" for="empName">الاسم</label>
+      <input type="text" id="empName">
+
+      <label class="field-label" for="empAddress">العنوان</label>
+      <input type="text" id="empAddress">
+
+      <label class="field-label" for="empPhone">التليفون</label>
+      <input type="tel" id="empPhone" inputmode="tel">
+
+      <label class="field-label" for="empQualification">المؤهل</label>
+      <input type="text" id="empQualification">
+
+      <div class="field-row">
+        <div>
+          <label class="field-label" for="empLaw">القانون التابع له</label>
+          <input type="text" id="empLaw" placeholder="مثال: قانون الخدمة المدنية">
+        </div>
+        <div>
+          <label class="field-label" for="empStatus">الموقف</label>
+          <select id="empStatus">
+            <option value="">-- اختر --</option>
+            <option value="أصلي">أصلي</option>
+            <option value="منتدب">منتدب</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="field-label" for="empJobDetails">الوظيفة / التفاصيل</label>
+      <input type="text" id="empJobDetails">
+
+      <label class="field-label" for="empAcademyJobTitle">المسمى الوظيفي بالأكاديمية</label>
+      <input type="text" id="empAcademyJobTitle">
+
+      <div class="field-row">
+        <div>
+          <label class="field-label" for="empCadrePosition">الوظيفة على الكادر</label>
+          <input type="text" id="empCadrePosition">
+        </div>
+        <div>
+          <label class="field-label" for="empFinancialGrade">الدرجة المالية</label>
+          <input type="text" id="empFinancialGrade">
+        </div>
+      </div>
+
+      <label class="field-label">المستندات (اختياري عند الإدخال، ممكن تُضاف لاحقًا)</label>
+      <div class="doc-grid">
+        <div class="doc-card"><span class="doc-label">السيرة الذاتية</span><input type="file" id="fileCv" accept="image/*,application/pdf"></div>
+        <div class="doc-card"><span class="doc-label">الصحيفة</span><input type="file" id="fileSheet" accept="image/*,application/pdf"></div>
+        <div class="doc-card"><span class="doc-label">مفردات المرتب</span><input type="file" id="filePayslip" accept="image/*,application/pdf"></div>
+        <div class="doc-card"><span class="doc-label">مستند آخر</span><input type="file" id="fileOther" accept="image/*,application/pdf"></div>
+      </div>
+
+      <button class="btn-primary" id="saveEmpBtn" onclick="submitEmployee()">حفظ بيانات الموظف</button>
+      <div id="empMessage" class="form-message"></div>
+    </div>
+
+  </section>
+
+  <!-- ============== تبويب المقر الرئيسي ============== -->
+  <section id="tab-hq" class="tab-panel">
+
+    <div id="hqLock" class="hq-lock">
+      <div class="hq-lock-icon">🔒</div>
+      <h3>تبويب المقر الرئيسي محمي بكلمة مرور</h3>
+      <p>اطلب كلمة المرور من المقر الرئيسي لعرض بيانات كل المحافظات.</p>
+      <input type="password" id="hqPasswordInput" placeholder="كلمة المرور" autocomplete="off">
+      <button class="btn-primary" onclick="unlockHq()">دخول</button>
+      <div id="hqLockMessage" class="form-message"></div>
+    </div>
+
+    <div id="hqContent" style="display:none;">
+      <div class="panel">
+        <h2 class="section-title">استعلام العهدة / المستهلكات حسب المحافظة</h2>
+        <label class="field-label" for="hqInvBranch">اختر المحافظة</label>
+        <select id="hqInvBranch"><option value="">-- اختر --</option></select>
+        <div id="hqInventoryResults" class="results-area">
+          <p class="empty-state">اختر محافظة لعرض بياناتها.</p>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="panel">
+        <h2 class="section-title">بيانات العاملين حسب المحافظة</h2>
+        <label class="field-label" for="hqEmpBranch">اختر المحافظة</label>
+        <select id="hqEmpBranch"><option value="">-- اختر --</option></select>
+
+        <label class="field-label" for="hqEmpSearch">أو ابحث بالاسم / الرقم القومي (في كل المحافظات)</label>
+        <input type="text" id="hqEmpSearch" placeholder="اكتب اسم الموظف أو الرقم القومي...">
+
+        <div id="hqEmpCards" class="card-grid"></div>
+        <div id="employeeDetail" class="employee-detail" style="display:none;"></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="panel">
+        <button type="button" class="btn-link" onclick="toggleChangePw()">تغيير كلمة مرور المقر الرئيسي</button>
+        <div id="hqChangePwBox" class="hq-change-pw">
+          <label class="field-label" for="hqNewPassword">كلمة المرور الجديدة</label>
+          <input type="password" id="hqNewPassword" autocomplete="off">
+          <button class="btn-secondary" onclick="submitChangePw()">حفظ كلمة المرور الجديدة</button>
+          <div id="hqChangePwMessage" class="form-message"></div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+</div>
+
+<script>
+  // ⚠️ عدّل القيمتين دول بعد ما تنشر مشروع Apps Script (Code.gs) كـ Web App:
+  // API_URL = رابط الـ /exec بتاع النشر
+  // APP_KEY = القيمة اللي ظهرتلك في رسالة setupSpreadsheet (أو من شيت Settings مباشرة)
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzck2oS9f4WuozslwKd3sO_y8TrV6_EiQWGeUqyI59yba7XKFEbFdTso_ck3r18rWk/exec';
+  const APP_KEY = 'a4fe6726-aa3a-4898-9973-fc572d91095d';
+
+  let hqPassword = null; // بتتخزن في الذاكرة بس لحد ما تقفل الصفحة، مش بتتسجل في أي مكان
+
+  // ---------- نداء عام على الـ API — نفس أسلوب urlencoded body عشان نتفادى تعقيد CORS ----------
+  function callApi(action, params, onSuccess, onError) {
+    const body = new URLSearchParams();
+    body.set('action', action);
+    body.set('key', APP_KEY);
+    Object.keys(params || {}).forEach(function (k) {
+      if (params[k] !== undefined && params[k] !== null) body.set(k, params[k]);
+    });
+    fetch(API_URL, { method: 'POST', body: body })
+      .then(function (res) { return res.text(); })
+      .then(function (text) {
+        let json;
+        try { json = JSON.parse(text); }
+        catch (e) { if (onError) onError({ message: 'رد غير متوقع من الخادم.' }); return; }
+        if (json.success) { onSuccess(json.data); }
+        else if (onError) { onError({ message: json.error || 'حدث خطأ غير معروف.' }); }
+        else { alert('حدث خطأ: ' + json.error); }
+      })
+      .catch(function (err) {
+        if (onError) onError(err);
+        else alert('تعذر الاتصال بالخادم، تأكد من الإنترنت. (' + err.message + ')');
+      });
+  }
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function setMessage(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text || '';
+    el.className = 'form-message' + (type ? ' ' + type : '');
+  }
+
+  // ---------- تبديل التبويبات ----------
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === tab); });
+    document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+    document.getElementById('tab-' + tab).classList.add('active');
+  }
+
+  // ---------- تعبئة كل قوائم المحافظات ----------
+  function populateBranches(branches) {
+    ['invBranch', 'empBranch', 'hqInvBranch', 'hqEmpBranch'].forEach(function (id) {
+      const select = document.getElementById(id);
+      branches.forEach(function (name) {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        select.appendChild(opt);
+      });
+    });
+  }
+  window.addEventListener('DOMContentLoaded', function () {
+    callApi('getBranches', {}, populateBranches, function (err) {
+      alert('تعذر تحميل قائمة المحافظات: ' + err.message + '\nتأكد إن API_URL و APP_KEY متظبطين في أول الكود.');
+    });
+  });
+
+  /* =========================== تبويب الفروع =========================== */
+  function submitInventory() {
+    const branch = document.getElementById('invBranch').value;
+    const item = document.getElementById('invItem').value.trim();
+    const qty = document.getElementById('invQty').value;
+    const notes = document.getElementById('invNotes').value.trim();
+    if (!branch || !item) { setMessage('invMessage', 'اختر الفرع واكتب اسم الصنف.', 'error'); return; }
+    setMessage('invMessage', 'جاري الإرسال...', '');
+    callApi('submitInventoryEntry', { branch: branch, item: item, quantity: qty, notes: notes }, function () {
+      setMessage('invMessage', 'تم الحفظ بنجاح ✅', 'success');
+      document.getElementById('invItem').value = '';
+      document.getElementById('invQty').value = '';
+      document.getElementById('invNotes').value = '';
+    }, function (err) { setMessage('invMessage', 'حدث خطأ: ' + err.message, 'error'); });
+  }
+
+  function readFileAsBase64_(fileInput) {
+    return new Promise(function (resolve, reject) {
+      const file = fileInput.files[0];
+      if (!file) { resolve(null); return; }
+      const reader = new FileReader();
+      reader.onload = function () { resolve({ base64: reader.result.split(',')[1], mimeType: file.type, fileName: file.name }); };
+      reader.onerror = function () { reject(new Error('تعذّرت قراءة الملف: ' + file.name)); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function uploadEmployeeDocApi_(rowIndex, docType, fileData) {
+    return new Promise(function (resolve, reject) {
+      callApi('uploadEmployeeDocument', {
+        rowIndex: rowIndex, docType: docType,
+        base64Data: fileData.base64, mimeType: fileData.mimeType, fileName: fileData.fileName
+      }, resolve, reject);
+    });
+  }
+
+  function uploadSelectedDocs_(rowIndex, inputIds, docTypes) {
+    let chain = Promise.resolve();
+    inputIds.forEach(function (inputId, i) {
+      const input = document.getElementById(inputId);
+      if (!input || !input.files || !input.files[0]) return;
+      chain = chain
+        .then(function () { return readFileAsBase64_(input); })
+        .then(function (fileData) { if (fileData) return uploadEmployeeDocApi_(rowIndex, docTypes[i], fileData); });
+    });
+    return chain;
+  }
+
+  function clearEmployeeForm_() {
+    ['empNationalId', 'empName', 'empAddress', 'empPhone', 'empQualification', 'empLaw',
+      'empJobDetails', 'empAcademyJobTitle', 'empCadrePosition', 'empFinancialGrade'
+    ].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('empStatus').value = '';
+    ['fileCv', 'fileSheet', 'filePayslip', 'fileOther'].forEach(function (id) { document.getElementById(id).value = ''; });
+  }
+
+  function submitEmployee() {
+    const data = {
+      branch: document.getElementById('empBranch').value,
+      nationalId: document.getElementById('empNationalId').value.trim(),
+      name: document.getElementById('empName').value.trim(),
+      address: document.getElementById('empAddress').value.trim(),
+      phone: document.getElementById('empPhone').value.trim(),
+      qualification: document.getElementById('empQualification').value.trim(),
+      legalLaw: document.getElementById('empLaw').value.trim(),
+      status: document.getElementById('empStatus').value,
+      jobTitle: document.getElementById('empJobDetails').value.trim(),
+      academyJobTitle: document.getElementById('empAcademyJobTitle').value.trim(),
+      cadrePosition: document.getElementById('empCadrePosition').value.trim(),
+      financialGrade: document.getElementById('empFinancialGrade').value.trim()
+    };
+    if (!data.branch || !data.nationalId || !data.name) {
+      setMessage('empMessage', 'اختر الفرع، واكتب الاسم والرقم القومي على الأقل.', 'error');
+      return;
+    }
+    const btn = document.getElementById('saveEmpBtn');
+    btn.disabled = true;
+    setMessage('empMessage', 'جاري الحفظ...', '');
+
+    callApi('saveEmployee', data, function (result) {
+      setMessage('empMessage', 'جاري رفع المستندات (لو موجودة)...', '');
+      uploadSelectedDocs_(result.rowIndex, ['fileCv', 'fileSheet', 'filePayslip', 'fileOther'], ['cv', 'sheet', 'payslip', 'other'])
+        .then(function () { setMessage('empMessage', 'تم حفظ بيانات الموظف بنجاح ✅', 'success'); clearEmployeeForm_(); })
+        .catch(function (err) { setMessage('empMessage', 'اتحفظت البيانات، لكن حصل خطأ في رفع المستندات: ' + err.message, 'error'); })
+        .finally(function () { btn.disabled = false; });
+    }, function (err) { setMessage('empMessage', 'حدث خطأ: ' + err.message, 'error'); btn.disabled = false; });
+  }
+
+  /* =========================== تبويب المقر — قفل الباسورد =========================== */
+  function unlockHq() {
+    const pw = document.getElementById('hqPasswordInput').value;
+    if (!pw) { setMessage('hqLockMessage', 'اكتب كلمة المرور.', 'error'); return; }
+    setMessage('hqLockMessage', 'جاري التحقق...', '');
+    callApi('checkHqPassword', { hqPassword: pw }, function (ok) {
+      if (ok) {
+        hqPassword = pw;
+        document.getElementById('hqLock').style.display = 'none';
+        document.getElementById('hqContent').style.display = 'block';
+      } else {
+        setMessage('hqLockMessage', 'كلمة المرور غلط.', 'error');
+      }
+    }, function (err) { setMessage('hqLockMessage', 'حدث خطأ: ' + err.message, 'error'); });
+  }
+  document.getElementById('hqPasswordInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') unlockHq(); });
+
+  function toggleChangePw() { document.getElementById('hqChangePwBox').classList.toggle('open'); }
+
+  function submitChangePw() {
+    const newPw = document.getElementById('hqNewPassword').value;
+    if (!newPw || newPw.length < 4) { setMessage('hqChangePwMessage', 'كلمة المرور الجديدة لازم 4 حروف/أرقام على الأقل.', 'error'); return; }
+    setMessage('hqChangePwMessage', 'جاري الحفظ...', '');
+    callApi('changeHqPassword', { hqPassword: hqPassword, newPassword: newPw }, function () {
+      hqPassword = newPw;
+      setMessage('hqChangePwMessage', 'تم تغيير كلمة المرور بنجاح ✅', 'success');
+      document.getElementById('hqNewPassword').value = '';
+    }, function (err) { setMessage('hqChangePwMessage', 'حدث خطأ: ' + err.message, 'error'); });
+  }
+
+  /* =========================== تبويب المقر — الاستعلامات =========================== */
+  document.getElementById('hqInvBranch').addEventListener('change', function (e) {
+    const branch = e.target.value;
+    const box = document.getElementById('hqInventoryResults');
+    if (!branch) { box.innerHTML = '<p class="empty-state">اختر محافظة لعرض بياناتها.</p>'; return; }
+    box.innerHTML = '<p class="empty-state">جاري التحميل...</p>';
+    callApi('getInventoryForBranch', { branch: branch, hqPassword: hqPassword }, function (rows) { renderInventory(rows, box); },
+      function (err) { box.innerHTML = '<p class="empty-state">حدث خطأ: ' + err.message + '</p>'; });
+  });
+
+  function renderInventory(rows, container) {
+    if (!rows || rows.length === 0) { container.innerHTML = '<p class="empty-state">لا توجد بيانات مسجّلة لهذه المحافظة بعد.</p>'; return; }
+    container.innerHTML = rows.map(function (r) {
+      return '<div class="inventory-row">' +
+        '<div><div class="item-name">' + escapeHtml(r.item) + '</div>' +
+        '<div class="item-meta">آخر تحديث: ' + escapeHtml(r.lastUpdated || '—') + (r.notes ? ' · ' + escapeHtml(r.notes) : '') + '</div></div>' +
+        '<div class="item-qty">' + escapeHtml(String(r.quantity)) + '</div></div>';
+    }).join('');
+  }
+
+  document.getElementById('hqEmpBranch').addEventListener('change', function (e) {
+    const branch = e.target.value;
+    document.getElementById('hqEmpSearch').value = '';
+    const box = document.getElementById('hqEmpCards');
+    document.getElementById('employeeDetail').style.display = 'none';
+    if (!branch) { box.innerHTML = ''; return; }
+    box.innerHTML = '<p class="empty-state">جاري التحميل...</p>';
+    callApi('getEmployeesByBranch', { branch: branch, hqPassword: hqPassword }, function (rows) { renderEmployeeCards(rows, box); },
+      function (err) { box.innerHTML = '<p class="empty-state">حدث خطأ: ' + err.message + '</p>'; });
+  });
+
+  let hqSearchTimer = null;
+  document.getElementById('hqEmpSearch').addEventListener('input', function (e) {
+    clearTimeout(hqSearchTimer);
+    const q = e.target.value;
+    document.getElementById('employeeDetail').style.display = 'none';
+    const box = document.getElementById('hqEmpCards');
+    if (q.trim().length < 2) { box.innerHTML = ''; return; }
+    document.getElementById('hqEmpBranch').value = '';
+    hqSearchTimer = setTimeout(function () {
+      box.innerHTML = '<p class="empty-state">جاري البحث...</p>';
+      callApi('searchEmployees', { query: q, hqPassword: hqPassword }, function (rows) { renderEmployeeCards(rows, box); },
+        function (err) { box.innerHTML = '<p class="empty-state">حدث خطأ: ' + err.message + '</p>'; });
+    }, 300);
+  });
+
+  function renderEmployeeCards(rows, container) {
+    if (!rows || rows.length === 0) { container.innerHTML = '<p class="empty-state">لا يوجد موظفون مطابقون.</p>'; return; }
+    container.innerHTML = rows.map(function (r) {
+      return '<div class="employee-card" onclick="loadEmployee(' + r.rowIndex + ')">' +
+        '<div class="ec-name">' + escapeHtml(r.name) + '</div>' +
+        '<div class="ec-id">' + escapeHtml(r.nationalId) + '</div>' +
+        (r.branch ? '<div class="ec-meta">' + escapeHtml(r.branch) + (r.status ? ' · ' + escapeHtml(r.status) : '') + '</div>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  function loadEmployee(rowIndex) {
+    const detail = document.getElementById('employeeDetail');
+    detail.style.display = 'block';
+    detail.innerHTML = '<p class="empty-state">جاري التحميل...</p>';
+    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    callApi('getEmployeeDetails', { rowIndex: rowIndex, hqPassword: hqPassword }, renderEmployeeDetail,
+      function (err) { detail.innerHTML = '<p class="empty-state">حدث خطأ: ' + err.message + '</p>'; });
+  }
+
+  const DOC_TYPES = [
+    { key: 'cv', label: 'السيرة الذاتية' }, { key: 'sheet', label: 'الصحيفة' },
+    { key: 'payslip', label: 'مفردات المرتب' }, { key: 'other', label: 'مستند آخر' }
+  ];
+
+  function renderEmployeeDetail(emp) {
+    const detail = document.getElementById('employeeDetail');
+    const linkMap = { cv: emp.cvLink, sheet: emp.sheetDocLink, payslip: emp.payslipLink, other: emp.otherLink };
+    const docsHtml = DOC_TYPES.map(function (d) {
+      const link = linkMap[d.key];
+      return '<div class="doc-card"><span class="doc-label">' + d.label + '</span>' +
+        (link ? '<a class="doc-link" href="' + link + '" target="_blank">عرض المستند</a>' : '<span class="empty-state" style="padding:0;font-size:12px;">لا يوجد</span>') +
+        '<input type="file" accept="image/*,application/pdf" data-row="' + emp.rowIndex + '" data-type="' + d.key + '" onchange="uploadDoc(this)"></div>';
+    }).join('');
+
+    detail.innerHTML =
+      '<h2>' + escapeHtml(emp.name) + '</h2>' +
+      '<div class="ed-sub">الرقم القومي: ' + escapeHtml(emp.nationalId) + ' · ' + escapeHtml(emp.branch) + '</div>' +
+      '<div class="ed-grid">' +
+      '<div class="ed-field"><b>العنوان:</b> ' + escapeHtml(emp.address || '—') + '</div>' +
+      '<div class="ed-field"><b>التليفون:</b> ' + escapeHtml(emp.phone || '—') + '</div>' +
+      '<div class="ed-field"><b>المؤهل:</b> ' + escapeHtml(emp.qualification || '—') + '</div>' +
+      '<div class="ed-field"><b>القانون التابع له:</b> ' + escapeHtml(emp.legalLaw || '—') + '</div>' +
+      '<div class="ed-field"><b>الموقف:</b> ' + escapeHtml(emp.status || '—') + '</div>' +
+      '<div class="ed-field"><b>الوظيفة / التفاصيل:</b> ' + escapeHtml(emp.jobTitle || '—') + '</div>' +
+      '<div class="ed-field"><b>المسمى الوظيفي بالأكاديمية:</b> ' + escapeHtml(emp.academyJobTitle || '—') + '</div>' +
+      '<div class="ed-field"><b>الوظيفة على الكادر:</b> ' + escapeHtml(emp.cadrePosition || '—') + '</div>' +
+      '<div class="ed-field"><b>الدرجة المالية:</b> ' + escapeHtml(emp.financialGrade || '—') + '</div>' +
+      '</div>' +
+      (emp.folderLink ? '<div class="ed-field"><a class="doc-link" href="' + emp.folderLink + '" target="_blank">فتح فولدر الموظف على درايف</a></div>' : '') +
+      '<div class="doc-grid">' + docsHtml + '</div>';
+  }
+
+  function uploadDoc(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const rowIndex = input.dataset.row;
+    const docType = input.dataset.type;
+    input.disabled = true;
+    readFileAsBase64_(input)
+      .then(function (fileData) { return uploadEmployeeDocApi_(rowIndex, docType, fileData); })
+      .then(function () { loadEmployee(rowIndex); })
+      .catch(function (err) { alert('حدث خطأ أثناء الرفع: ' + err.message); input.disabled = false; });
+  }
+</script>
+</body>
+</html>
