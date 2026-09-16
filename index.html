@@ -176,7 +176,7 @@
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbw2m0kB-AZUk-aoBpbVgOpRWqdj5Wmb06ZLZGOKXC9o7Dwk7xWTSBi9tk75fYuv7CwX/exec';
+const API_URL = 'PUT_YOUR_NEW_APPS_SCRIPT_EXEC_URL_HERE';
 let currentUser = null;
 let sessionToken = sessionStorage.getItem('branch_hq_session') || '';
 let branches = [];
@@ -301,7 +301,7 @@ async function fileToData(input){
   const dataUrl=await new Promise((resolve,reject)=>{
     const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=()=>reject(new Error('تعذر قراءة الملف.')); r.readAsDataURL(file);
   });
-  return {base64:dataUrl.split(',')[1],mimeType:file.type,fileName:file.name};
+  return {base64Data:dataUrl.split(',')[1],mimeType:file.type,fileName:file.name};
 }
 
 async function uploadDocs(employeeId){
