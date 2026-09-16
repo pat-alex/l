@@ -312,18 +312,30 @@
       if (params[k] !== undefined && params[k] !== null) body.set(k, params[k]);
     });
     fetch(API_URL, { method: 'POST', body: body })
-      .then(function (res) { return res.text(); })
-      .then(function (text) {
+      .then(function (res) {
+        // نحفظ الحالة (status) عشان تبان في رسالة الخطأ لو حصل مشكلة
+        return res.text().then(function (text) { return { status: res.status, text: text }; });
+      })
+      .then(function (r) {
         let json;
-        try { json = JSON.parse(text); }
-        catch (e) { if (onError) onError({ message: 'رد غير متوقع من الخادم.' }); return; }
+        try { json = JSON.parse(r.text); }
+        catch (e) {
+          const preview = (r.text || '').slice(0, 200);
+          const msg = 'الخادم رجّع رد مش JSON (كود الحالة: ' + r.status + '). أول 200 حرف من الرد:\n' + preview;
+          console.error(msg);
+          if (onError) onError({ message: msg }); else alert(msg);
+          return;
+        }
         if (json.success) { onSuccess(json.data); }
         else if (onError) { onError({ message: json.error || 'حدث خطأ غير معروف.' }); }
         else { alert('حدث خطأ: ' + json.error); }
       })
       .catch(function (err) {
-        if (onError) onError(err);
-        else alert('تعذر الاتصال بالخادم، تأكد من الإنترنت. (' + err.message + ')');
+        // لو وصلنا هنا، الطلب اتمنع قبل ما يوصل السيرفر أصلاً (غالبًا CORS أو مفيش إنترنت)
+        const msg = 'تعذر تنفيذ الطلب (' + err.name + '): ' + err.message +
+          '\nافتح أدوات المطوّر (F12) ← Console/Network لمزيد من التفاصيل.';
+        console.error(msg, err);
+        if (onError) onError({ message: msg }); else alert(msg);
       });
   }
 
